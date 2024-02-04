@@ -1,101 +1,90 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, ButtonHTMLAttributes } from "react";
 import Lottie from "react-lottie";
 import styled from "styled-components";
 import bunnyCry from "./animations/bunnyCry.json";
 import bunnyPlease from "./animations/bunnyPlease.json";
 import bunnyYes from "./animations/bunnyYes.json";
 import bunnyPunch from "./animations/bunnyPunch.json";
-import Button from "./components/Button";
+import bunnyCool from "./animations/bunnyCool.json";
+import bunnyText from "./animations/bunnyText.json";
 
-const getRandomPosition = () => {
-  if (typeof window !== 'undefined') {
-    return ({
-      randomLeft: `${Math.random() * (window.innerWidth - 100)}px`,
-      randomTop: `${Math.random() * (window.innerHeight - 50)}px`,
-    })
-  } else {
-    return ({
-      randomLeft: "0px",
-      randomTop: "0px",
-    })
-  }
+const createBunnyOptions = (animationData: any) => {
+  return {
+    loop: true,
+    autoplay: true,
+    animationData: animationData,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
 }
-
 function Home() {
-  const bunnyCryOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: bunnyCry,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-  const bunnyPleaseOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: bunnyPlease,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-  const bunnyYesOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: bunnyYes,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-  const bunnyPunchOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: bunnyPunch,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-
+  const bunnyCryOptions = createBunnyOptions(bunnyCry);
+  const bunnyPleaseOptions = createBunnyOptions(bunnyPlease);
+  const bunnyCoolOptions = createBunnyOptions(bunnyCool);
+  const bunnyYesOptions = createBunnyOptions(bunnyYes);
+  const bunnyPunchOptions = createBunnyOptions(bunnyPunch);
+  const bunnyTextOptions = createBunnyOptions(bunnyText);
   const [bunnyState, setBunnyState] = useState("normal")
   const [hovered, setHovered] = useState(false);
-  const [randomPosition, setRandomPosition] = useState(getRandomPosition());
+  const [size, setSize] = useState(1);
+  const [intervalId, setIntervalId] = useState(null);
   const [hasStarted, setHasStarted] = useState(false)
 
   const bunnyObj: { [key: number]: string } = { 0: "cry", 1: "punch" };
   const handleHover = (hoverState: boolean) => {
-    setHasStarted(true)
+    setHasStarted(true);
     if (hoverState === true) {
-      setRandomPosition(getRandomPosition());
-      const randomBunnyState = Math.floor(Math.random() * 2);
-      setBunnyState(bunnyObj[randomBunnyState] as string)
+      const id = setInterval(() => {
+        setSize((prevSize) => prevSize + 1);
+        const randomBunnyState = Math.floor(Math.random() * 2);
+        setBunnyState(bunnyObj[randomBunnyState] as string)
+      }, 100);
+      setIntervalId(id);
+    } else {
+      // If mouse leaves, clear the interval to stop increasing size
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        setIntervalId(null); // Reset the interval ID
+      }
     }
     setHovered(hoverState);
 
+  };
+  const buttonStyle = {
+    fontSize: `${16 * size}px`,
+    padding: `${10 * size}px ${20 * size}px`,
+    width: `${100 * size}px`,
+    height: `${40 * size}px`,
   };
 
   return (
     <StyledHome data-testid="container">
       <div className="home-container">
-        {bunnyState === "yes" ? <div className="title">Hasta la vista Baby  !!!!</div> : <div className="title">Will you go out with me?</div>}
+        {bunnyState === "yes" ? <div className="title">Text me Baby  !!!!</div> : <div className="title">Will you be my Val?</div>}
         <div className="animation">
           {bunnyState === "normal" && <Lottie options={bunnyPleaseOptions} height={300} width={300} />}
+          {bunnyState === "cool" && <Lottie options={bunnyCoolOptions} height={300} width={300} />}
           {bunnyState === "cry" && <Lottie options={bunnyCryOptions} height={300} width={300} />}
-          {bunnyState === "yes" && <Lottie options={bunnyYesOptions} height={400} width={400} />}
+          {bunnyState === "yes" && <Lottie options={bunnyTextOptions} height={400} width={400} />}
           {bunnyState === "punch" && <Lottie options={bunnyPunchOptions} height={300} width={300} />}
         </div>
         {bunnyState !== "yes" && <div className="buttons">
-          <button onClick={() => setBunnyState("yes")} onMouseEnter={() => setBunnyState("normal")}>Yes</button>
-          <Button
-            $randomleft={randomPosition.randomLeft}
-            $randomtop={randomPosition.randomTop}
-            $hasstarted={hasStarted}
+          <YesButton style={buttonStyle} onClick={() => setBunnyState("yes")} onMouseEnter={() => setBunnyState("cool")}>Yes</YesButton>
+          <button
             onMouseEnter={() => handleHover(true)}
             onMouseLeave={() => handleHover(false)}
-
+            style={{
+              fontSize: `16px`,
+              padding: `10px 20px`,
+              width: `100px`,
+              height: `40px`,
+            }}
           >
             No
-          </Button>
+          </button>
         </div>}
       </div>
     </StyledHome >
@@ -127,7 +116,13 @@ const StyledHome = styled.div`
   .buttons{
     display: flex;
     gap: 2rem;
+    align-items: center;
   }
 `;
 
+interface YesButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+}
+
+const YesButton = styled.button<YesButtonProps>`
+`;
 export default Home;
